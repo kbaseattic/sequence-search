@@ -1,0 +1,17 @@
+@import "~antd/dist/antd.css";
+
+.page-content {
+  background: #ffffff;
+  margin: 0 50px;
+  padding: 25px 50px;
+}
+
+.logo {
+  display: block;
+  text-indent: -9999px;
+  margin-top: 8px;
+  width: 46px;
+  height: 46px;
+  background: url(/img/kbase_logo.png);
+  background-size: 46px 46px;
+}
