@@ -1,16 +1,10 @@
-import React, { FC, useEffect, useState } from 'react';
-import { Layout, Spin, Form, Image, Input, Select, InputNumber, Button, PageHeader } from 'antd';
+import React, { FC } from 'react';
+import { Layout, Spin, Form, Image, Input, Select, List, Avatar, InputNumber, Button, PageHeader } from 'antd';
 import './App.css';
-const { Header, Content, Footer } = Layout;
+import { Search, useSearch } from './hooks/searches';
+import { useNamespaces } from './hooks/namespaces';
 
-interface Namespace {
-  database: string
-  datasource: string
-  desc: string
-  id: string
-  lastmod: number
-  seqcount: number
-}
+const { Header, Content, Footer } = Layout;
 
 const formItemLayout = {
   labelCol: {
@@ -23,25 +17,17 @@ const formItemLayout = {
   },
 };
 
-const AppForm: FC = () => {
-  const [namespaces, setNamespaces] = useState<Namespace[]>([]);
-  const [namespaceLoaded, setNamespaceLoaded] = useState(false);
-  useEffect(() => {
-    (async () => {
-      if (!namespaceLoaded) {
-        const response = await fetch("/api/namespace");
-        setNamespaces(await response.json())
-        setNamespaceLoaded(true)
-      }
-    })();
-  }, [namespaceLoaded]);
+type AppFormProps = { onSubmit: (namespace: string, sequence: string, eVal: number) => any };
+const AppForm: FC<AppFormProps> = ({ onSubmit }) => {
+  const { namespaces, namespaceLoaded } = useNamespaces();
 
   const loaded = namespaceLoaded;
+  const onFinish = ({ namespace, sequence, eVal }: { namespace: string, sequence: string, eVal: number }) => onSubmit(namespace, sequence, eVal);
 
   return (
     <Spin spinning={!loaded}>
       <PageHeader title='Sequence Search' />
-      <Form onFinish={(...args) => console.log(args)} {...formItemLayout}>
+      <Form onFinish={onFinish} {...formItemLayout}>
         <Form.Item
           label="Namespace"
           name="namespace"
@@ -78,14 +64,44 @@ const AppForm: FC = () => {
   )
 }
 
+type AppResultsProps = { searches: Search[] };
+const AppResults: FC<AppResultsProps> = ({ searches }) => {
+  return (
+    <div>
+      <PageHeader title='Results' />
+      <List
+        dataSource={searches}
+        itemLayout="vertical"
+        renderItem={search => (
+          <List.Item>
+            <List.Item.Meta
+              avatar={
+                <Spin spinning={search.status != "completed"}>
+                  <Avatar>{search.ticketId}</Avatar>
+                </Spin>
+              }
+              title={`Search #${search.ticketId}`}
+              description={`Status: ${search.status}`}
+            />
+            <pre>{JSON.stringify(search.result, null, 2)}</pre>
+          </List.Item>
+        )}
+      />
+    </div>
+  )
+}
+
 const App: FC = () => {
+  const { searches, newSearch } = useSearch();
+
   return (
     <Layout className="layout" style={{ minHeight: "100vh" }}>
       <Header style={{ background: '#ffffff', borderBottom: "5px solid #E0E0E0", height: "70px" }}>
         <Image src='/img/kbase_logo.png' />
       </Header>
       <Content className="page-content">
-        <AppForm />
+        <AppForm onSubmit={newSearch} />
+        <AppResults searches={searches}></AppResults>
       </Content>
       <Footer />
     </Layout>
