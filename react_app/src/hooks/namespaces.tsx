@@ -1,13 +1,5 @@
 import { useEffect, useState } from 'react';
-
-interface Namespace {
-  database: string
-  datasource: string
-  desc: string
-  id: string
-  lastmod: number
-  seqcount: number
-}
+import { Namespace } from '../types/Namespace';
 
 export function useNamespaces() {
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);

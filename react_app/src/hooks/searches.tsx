@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
+import { Search } from '../types/Search';
 
-export interface Search {
-  ticketId: string,
-  status?: "queued" | "processing" | "completed",
-  result?: any
-}
 
 export function useSearch() {
   const [searches, setSearches] = useState<Search[]>([{ ticketId: "42" }, { ticketId: "31" }, { ticketId: "36" }]);
