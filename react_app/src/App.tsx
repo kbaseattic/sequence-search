@@ -8,7 +8,7 @@ import { SearchForm } from './components/SearchForm';
 const { Header, Content, Footer } = Layout;
 
 const App: FC = () => {
-  const { searches, newSearch } = useSearch();
+  const { searches, newSearch, addSearchById, clearSearches } = useSearch();
 
   return (
     <Layout className="App__layout">
@@ -17,7 +17,7 @@ const App: FC = () => {
       </Header>
       <Content className="App__content">
         <SearchForm onSubmit={newSearch} />
-        <SearchResults searches={searches}></SearchResults>
+        <SearchResults searches={searches} addSearchById={addSearchById} clearSearches={clearSearches}></SearchResults>
       </Content>
       <Footer />
     </Layout>

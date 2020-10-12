@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
+import { notification } from 'antd';
+import createPersistedState from 'use-persisted-state';
 import { Search } from '../types/Search';
+
+const useSearchState = createPersistedState('search')
 
 
 export function useSearch() {
-  const [searches, setSearches] = useState<Search[]>([{ ticketId: "42" }, { ticketId: "31" }, { ticketId: "36" }]);
+  const [searches, setSearches] = useSearchState([]) as [Search[], Function];
 
   const pendingSearchIds = searches
-    .filter(search => search.status != "completed")
+    .filter(search => search.status !== "completed")
     .map(search => search.ticketId)
     .filter((v, i, a) => a.indexOf(v) === i)
     .sort();
@@ -15,37 +19,70 @@ export function useSearch() {
   const searchStatusSentinal = JSON.stringify(pendingSearchIds);
 
   async function newSearch(namespace: string, sequence: string) {
-    const response = await fetch("/api/search", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ namespace, sequence })
-    });
-    const search: Search = {
-      ticketId: (await response.json()).toString()
-    };
+    try {
+      const response = await fetch("/api/search", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ namespace, sequence })
+      });
+      if (response.ok) {
+        const search: Search = {
+          ticketId: (await response.json()).toString()
+        };
+        setSearches([search, ...searches])
+      } else {
+        throw new Error(`Failed to submit search, received ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      notification.open({
+        message: 'Failed to submit search',
+        description: (err instanceof Error) ? err.message : JSON.stringify(err),
+        type: 'error'
+      });
+    }
+  }
+
+  function addSearchById(ticketId: string) {
+    const search: Search = { ticketId };
     setSearches([search, ...searches])
   }
 
+  function clearSearches() {
+    setSearches([])
+  }
+
   async function pollStatus() {
-    const response = await fetch("/api/search_status", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(pendingSearchIds)
-    });
-    const status = await response.json();
-    const needsUpdate = searches.some(search => search.status != status[search.ticketId]);
-    if (needsUpdate) {
-      setSearches(
-        searches.map(search => ({
-          ticketId: search.ticketId,
-          status: status[search.ticketId] || search.status,
-          result: search.result
-        }))
-      )
+    try {
+      const response = await fetch("/api/search_status", {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(pendingSearchIds)
+      });
+      if (response.ok) {
+        const status = await response.json();
+        const needsUpdate = searches.some(search => status[search.ticketId] && search.status !== status[search.ticketId]);
+        if (needsUpdate) {
+          setSearches(
+            searches.map(search => ({
+              ticketId: search.ticketId,
+              status: status[search.ticketId] || search.status,
+              result: search.result
+            }))
+          )
+        }
+      } else {
+        throw new Error(`Failed to poll search status, received ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      notification.open({
+        message: 'Failed to poll search status',
+        description: (err instanceof Error) ? err.message : JSON.stringify(err),
+        type: 'error'
+      });
     }
   }
 
@@ -72,7 +109,7 @@ export function useSearch() {
   useEffect(() => {
     if (searches.every(search => search.status === "completed")) return;
     pollStatus();
-    const poll = setInterval(pollStatus, 1000);
+    const poll = setInterval(pollStatus, 3000);
     return () => clearInterval(poll);
   }, [searchStatusSentinal]);
 
@@ -85,5 +122,5 @@ export function useSearch() {
     }
   }, [searches]);
 
-  return { searches, newSearch }
+  return { searches, newSearch, addSearchById, clearSearches }
 }
