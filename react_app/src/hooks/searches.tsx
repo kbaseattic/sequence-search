@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
 import { notification } from 'antd';
-import createPersistedState from 'use-persisted-state';
+import { useLocalStorage } from '@rehooks/local-storage';
 import { Search } from '../types/Search';
 import { Namespace } from '../types/Namespace';
 
-const useSearchState = createPersistedState('searchIds');
-
 export function useSearch() {
-  const [searchIds, setSearchIds] = useSearchState([]) as [Search['ticketId'][], Function];
+  const [searchIds, setSearchIds] = useLocalStorage<Search['ticketId'][]>('searchIds', []);
   const [searchStatus, setSearchStatus] = useState<Record<Search['ticketId'], Search['status']>>({});
   const [searchResults, setSearchResults] = useState<Record<Search['ticketId'], Search['result']>>({});
 
@@ -104,7 +102,7 @@ export function useSearch() {
     }
   }
 
-  function addSearchById(id?: Search['ticketId']) {
+  function addSearchById(id: Search['ticketId']) {
     setSearchIds([id, ...searchIds])
   }
 
