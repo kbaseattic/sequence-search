@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
 import { Spin, Form, Input, Select, InputNumber, Button, PageHeader, Alert } from 'antd';
 import { useNamespaces } from '../hooks/namespaces';
+import { validateFASTA } from '../utils/validateFASTA';
 
 const formItemLayout = {
   labelCol: {
@@ -51,7 +52,14 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
           <Form.Item
             label="Sequence"
             name="sequence"
-            rules={[{ required: true, message: 'Please input a sequence!' }]}
+            rules={[
+              { required: true, message: 'Please input a sequence!' },
+              ({ getFieldValue }) => ({
+                validator(rule, value) {
+                  return validateFASTA(value);
+                },
+              }),
+            ]}
           >
             <Input.TextArea rows={5} />
           </Form.Item>
