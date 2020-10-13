@@ -13,10 +13,10 @@ const ResultContent: FC<{ search: Search }> = ({ search }) => {
             dataSource={search.result?.alignments || []}
             rowKey={record => JSON.stringify(record)}
             columns={[
-              { title: "E-value", dataIndex: "evalue", sorter: true },
-              { title: "Bit-score", dataIndex: "bitscore", sorter: true },
-              { title: "Query", dataIndex: "queryid", sorter: true },
-              { title: "Target", dataIndex: "targetid", sorter: true },
+              { title: "E-value", dataIndex: "evalue", key: "evalue" },
+              { title: "Bit-score", dataIndex: "bitscore", key: "bitscore" },
+              { title: "Query", dataIndex: "queryid", key: "queryid" },
+              { title: "Target", dataIndex: "targetid", key: "targetid" },
             ]}
             expandable={{
               expandedRowRender: record => (

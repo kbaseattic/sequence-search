@@ -30,7 +30,7 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
           showIcon
         />
         :
-        <Form onFinish={onFinish} {...formItemLayout}>
+        <Form onFinish={onFinish} {...formItemLayout} initialValues={{ eVal: 0 }}>
           <Form.Item
             label="Namespace"
             name="namespace"
@@ -38,7 +38,7 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
           >
             <Select>
               {namespaces.map((item) => {
-                return <Select.Option value={item.id}>{item.desc}</Select.Option>;
+                return <Select.Option key={item.id} value={item.id}>{item.desc}</Select.Option>;
               })}
             </Select>
           </Form.Item>
@@ -46,7 +46,7 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
             label="E-Value Threshold"
             name="eVal"
           >
-            <InputNumber defaultValue={0} max={1} min={0}></InputNumber>
+            <InputNumber max={1} min={0}></InputNumber>
           </Form.Item>
           <Form.Item
             label="Sequence"
