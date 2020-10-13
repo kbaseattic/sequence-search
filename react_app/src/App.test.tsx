@@ -1,9 +1,9 @@
 import React from 'react';
-import { shallow } from 'enzyme';
+import { mount } from 'enzyme';
 import App from './App';
 
-test('shallow mounts', () => {
+test('App mounts', () => {
   expect(() => {
-    shallow(<App />)
+    mount(<App />)
   }).not.toThrow();
 });

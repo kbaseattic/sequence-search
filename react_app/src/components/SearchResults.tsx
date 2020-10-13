@@ -52,11 +52,13 @@ export const SearchResults: FC<SearchResultsProps> = ({ searches, addSearchById,
         title='Search Results'
         extra={[
           <Input.Search
+            key="1"
             placeholder="Find result by ID"
             onSearch={value => addSearchById(value)}
             style={{ width: 200 }}
           />,
           <Popconfirm
+            key="2"
             title="Are you sure? This will clear all results."
             onConfirm={clearSearches}
             okText="Yes"
