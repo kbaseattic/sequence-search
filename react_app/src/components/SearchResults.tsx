@@ -1,6 +1,7 @@
 import React, { FC } from 'react';
-import { Spin, List, Table, Avatar, PageHeader, Card, Tabs, Button, Popconfirm, Input } from 'antd';
+import { Spin, List, Table, Avatar, PageHeader, Tabs, Button, Popconfirm, Input } from 'antd';
 import { Search } from '../types/Search';
+import { Alignment } from './Alignment';
 
 const ResultContent: FC<{ search: Search }> = ({ search }) => {
   if (search.status !== "completed") return <React.Fragment />;
@@ -20,11 +21,12 @@ const ResultContent: FC<{ search: Search }> = ({ search }) => {
             ]}
             expandable={{
               expandedRowRender: record => (
-                <Card style={{ width: "100%" }}>
-                  <pre>
-                    {`Query  ${record.queryalignstart} ${record.queryalignseq}\nTarget ${record.targetalignstart} ${record.targetalignseq}`}
-                  </pre>
-                </Card>
+                <Alignment
+                  querySeq={record.queryalignseq}
+                  queryStart={record.queryalignstart}
+                  targetSeq={record.targetalignseq}
+                  targetStart={record.targetalignstart}
+                />
               ),
             }}
           />
