@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Layout, Image } from 'antd';
 import './App.css';
-import { useSearch } from './hooks/searches';
+import { useSearch } from './hooks/useSearches';
 import { SearchResults } from './components/SearchResults';
 import { SearchForm } from './components/SearchForm';
 

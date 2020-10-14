@@ -1,6 +1,6 @@
 import React, { FC } from 'react';
 import { Spin, Form, Input, Select, InputNumber, Button, PageHeader, Alert } from 'antd';
-import { useNamespaces } from '../hooks/namespaces';
+import { useNamespaces } from '../hooks/useNamespaces';
 import { validateFASTA } from '../utils/validateFASTA';
 
 const formItemLayout = {

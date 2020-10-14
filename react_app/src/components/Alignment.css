@@ -1,0 +1,43 @@
+.Alignment {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+.Alignment__seq {
+  white-space: nowrap;
+  display: inline-block;
+  margin: 0 12px 0 12px;
+}
+
+.Alignment__seq-wrapper {
+  overflow-x: auto;
+  position: relative;
+  background: linear-gradient(90deg, white 0%, rgba(255, 255, 255, 0)),
+    linear-gradient(-90deg, white 0%, rgba(255, 255, 255, 0)) 100% 0,
+    radial-gradient(
+      farthest-side at 0% 37.5%,
+      rgba(0, 0, 0, 0.3),
+      rgba(0, 0, 0, 0)
+    ),
+    radial-gradient(
+        farthest-side at 100% 37.5%,
+        rgba(0, 0, 0, 0.3),
+        rgba(0, 0, 0, 0)
+      )
+      100% 0%;
+  background-repeat: no-repeat;
+  background-color: white;
+  background-size: 80px 100%, 80px 100%, 20px 125%, 20px 125%;
+  background-attachment: local, local, scroll, scroll;
+  padding: 12px 0;
+  margin-left: 0.5em;
+}
+
+.Alignment__label {
+  text-align: right;
+  padding: 12px 0;
+  margin: 0 0 0 1em;
+}
