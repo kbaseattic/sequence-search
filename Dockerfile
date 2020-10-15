@@ -26,6 +26,6 @@ COPY . ./
 # URL for genesearch api
 ENV GENESEARCH_URL=https://genesearch.kbase.us/
 # URL for sequence-search UI
-ENV PUBLIC_URL=https://narrative-dev.kbase.us/services/sequence-search/
+ENV PUBLIC_URL=https://narrative-dev.kbase.us/sequence-search/
 
 CMD ["sh","./scripts/start.sh"]

@@ -4,10 +4,11 @@ import { useLocalStorage } from '@rehooks/local-storage';
 import { Search } from '../types/Search';
 import { Namespace } from '../types/Namespace';
 import { usePrevious } from './usePrevious';
+import { urlFor } from '../utils/urlFor';
 
 async function fetchStatus(searchIds: Search['ticketId'][]) {
   try {
-    const response = await fetch("/api/search_status", {
+    const response = await fetch(urlFor("/api/search_status"), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -31,7 +32,7 @@ async function fetchStatus(searchIds: Search['ticketId'][]) {
 
 async function fetchResult(id: Search['ticketId']) {
   try {
-    const response = await fetch(`/api/search_result?id=${id}`);
+    const response = await fetch(urlFor(`/api/search_result?id=${id}`));
     if (response.ok) {
       const result = await response.json();
       return result as Search['result']
@@ -84,7 +85,7 @@ export function useSearch() {
 
   async function newSearch(namespace: Namespace['id'], sequence: string) {
     try {
-      const response = await fetch("/api/search", {
+      const response = await fetch(urlFor("/api/search"), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

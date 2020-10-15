@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Namespace } from '../types/Namespace';
+import { urlFor } from '../utils/urlFor';
 
 export function useNamespaces() {
   const [namespaces, setNamespaces] = useState<Namespace[]>([]);
@@ -10,7 +11,7 @@ export function useNamespaces() {
     (async () => {
       if (!namespaceLoaded) {
         try {
-          const response = await fetch("/api/namespace");
+          const response = await fetch(urlFor("/api/namespace"));
           if (response.ok) {
             setNamespaces(await response.json());
             setNamespaceError(undefined);

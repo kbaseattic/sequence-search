@@ -1,10 +1,18 @@
 import os
 from sanic import Sanic
-from sanic.response import json
+from sanic.response import json, file as fileResponse
 from .genesearch import Genesearch
 
 app = Sanic("sequence_search")
-app.static(file_or_directory='/app/react_app/build', uri='/')
+
+build_directory = '/app/react_app/build'
+app.static('/', build_directory)
+
+
+@app.route("/")
+async def index(request):
+    return await fileResponse(build_directory + "/index.html")
+
 
 genesearch = Genesearch(os.environ['GENESEARCH_URL'])
 
