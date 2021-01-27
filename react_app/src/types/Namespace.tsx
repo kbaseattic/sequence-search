@@ -1,8 +1,8 @@
 export interface Namespace {
-  database: string;
-  datasource: string;
-  desc: string;
-  id: string;
-  lastmod: number;
-  seqcount: number;
+  id: string,
+  description: string,
+  institution: string,
+  database: string,
+  lastModified: number,
+  seqcount: number
 }

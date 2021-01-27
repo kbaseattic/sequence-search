@@ -1,4 +1,4 @@
-import { validateFASTA } from "./validateFASTA";
+import { validateFASTA } from "./handleFASTA";
 
 test("Validates single FASTA entry", () => {
   expect(

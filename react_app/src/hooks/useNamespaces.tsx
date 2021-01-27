@@ -11,7 +11,7 @@ export function useNamespaces() {
     (async () => {
       if (!namespaceLoaded) {
         try {
-          const response = await fetch(urlFor("/api/namespace"));
+          const response = await fetch(urlFor("/api/v1/namespaces"));
           if (response.ok) {
             setNamespaces(await response.json());
             setNamespaceError(undefined);

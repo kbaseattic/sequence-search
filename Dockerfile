@@ -24,7 +24,7 @@ RUN pip3 install -r requirements.txt
 COPY . ./
 
 # URL for genesearch api
-ENV GENESEARCH_URL=https://genesearch.kbase.us/
+ENV GENESEARCH_URL=http://lb.genesearch.production.svc.spin.nersc.org/api/v1/
 # URL for sequence-search UI
 ENV PUBLIC_URL=https://narrative-dev.kbase.us/sequence-search/
 
