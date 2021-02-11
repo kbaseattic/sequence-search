@@ -14,18 +14,18 @@ const ResultContent: FC<{ search: Search }> = ({ search }) => {
             dataSource={search.result?.alignments || []}
             rowKey={record => JSON.stringify(record)}
             columns={[
-              { title: "E-value", dataIndex: "evalue", key: "evalue" },
-              { title: "Bit-score", dataIndex: "bitscore", key: "bitscore" },
-              { title: "Query", dataIndex: "queryid", key: "queryid" },
-              { title: "Target", dataIndex: "targetid", key: "targetid" },
+              { title: "E-value", dataIndex: "eValue" },
+              { title: "Bit-score", dataIndex: "bitScore" },
+              { title: "Query Seq", dataIndex: ["queryAlignment", "sequenceId"] },
+              { title: "Target Seq", dataIndex: ["targetAlignment", "sequenceId"] },
             ]}
             expandable={{
               expandedRowRender: record => (
                 <Alignment
-                  querySeq={record.queryalignseq}
-                  queryStart={record.queryalignstart}
-                  targetSeq={record.targetalignseq}
-                  targetStart={record.targetalignstart}
+                  querySeq={record.queryAlignment.data}
+                  queryStart={record.queryAlignment.start}
+                  targetSeq={record.targetAlignment.data}
+                  targetStart={record.targetAlignment.start}
                 />
               ),
             }}
@@ -76,11 +76,11 @@ export const SearchResults: FC<SearchResultsProps> = ({ searches, addSearchById,
             <List.Item.Meta
               avatar={(
                 <Spin spinning={search.status !== "completed"}>
-                  <Avatar>{search.ticketId}</Avatar>
+                  <Avatar>{search.status === "completed" ? '\u2714' : ''}</Avatar>
                 </Spin>
               )}
-              title={`Search ID #${search.ticketId}`}
-              description={`Status: ${search.status}`} />
+              title={`Search ID: ${search.id}`}
+              description={`Status: ${search.status ?? 'unknown'}`} />
             <ResultContent search={search} />
           </List.Item>
         )} />

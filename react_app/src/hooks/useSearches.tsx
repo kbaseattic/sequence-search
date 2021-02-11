@@ -5,19 +5,18 @@ import { Search } from '../types/Search';
 import { Namespace } from '../types/Namespace';
 import { usePrevious } from './usePrevious';
 import { urlFor } from '../utils/urlFor';
+import { parseFASTA } from '../utils/handleFASTA';
 
-async function fetchStatus(searchIds: Search['ticketId'][]) {
+async function fetchStatuses() {
   try {
-    const response = await fetch(urlFor("/api/search_status"), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(searchIds)
-    });
+    const response = await fetch(urlFor("/api/v1/jobs"));
     if (response.ok) {
-      const newStatus = await response.json();
-      return newStatus as Record<Search['ticketId'], Search['status']>
+      const searchStatus: Record<Search['id'], Search> = await response.json();
+      const newStatuses: Record<Search['id'], Search['status']> = {};
+      for (const id in searchStatus) {
+        newStatuses[id] = searchStatus[id].status
+      }
+      return newStatuses
     } else {
       throw new Error(`Failed to poll search status, received ${response.status}: ${response.statusText}`);
     }
@@ -30,12 +29,12 @@ async function fetchStatus(searchIds: Search['ticketId'][]) {
   }
 }
 
-async function fetchResult(id: Search['ticketId']) {
+async function fetchResult(id: Search['id']) {
   try {
-    const response = await fetch(urlFor(`/api/search_result?id=${id}`));
+    const response = await fetch(urlFor(`/api/v1/jobs/${id}`));
     if (response.ok) {
-      const result = await response.json();
-      return result as Search['result']
+      const result: Search['result'] = await response.json();
+      return result
     } else {
       throw new Error(`Failed to retrieve search result for ${id}, received ${response.status}: ${response.statusText}`);
     }
@@ -49,9 +48,9 @@ async function fetchResult(id: Search['ticketId']) {
 }
 
 export function useSearch() {
-  const [searchIds, setSearchIds] = useLocalStorage<Search['ticketId'][]>('searchIds', []);
-  const [searchStatus, setSearchStatus] = useState<Record<Search['ticketId'], Search['status']>>({});
-  const [searchResults, setSearchResults] = useState<Record<Search['ticketId'], Search['result']>>({});
+  const [searchIds, setSearchIds] = useLocalStorage<Search['id'][]>('searchIds', []);
+  const [searchStatus, setSearchStatus] = useState<Record<Search['id'], Search['status']>>({});
+  const [searchResults, setSearchResults] = useState<Record<Search['id'], Search['result']>>({});
 
   // Poll for search status changes
   const shouldPoll = searchIds.some(id => searchStatus[id] !== "completed");
@@ -59,7 +58,7 @@ export function useSearch() {
     if (!shouldPoll) return;
 
     const poll = async () => {
-      const next = await fetchStatus(searchIds);
+      const next = await fetchStatuses();
       setSearchStatus(prev => ({ ...prev, ...next }))
     };
 
@@ -83,18 +82,20 @@ export function useSearch() {
     })
   }, [newlyCompleted]);
 
-  async function newSearch(namespace: Namespace['id'], sequence: string) {
+  async function newSearch(namespace: Namespace['id'], fasta: string, eVal: number) {
     try {
-      const response = await fetch(urlFor("/api/search"), {
+      const response = await fetch(urlFor(`/api/v1/namespaces/${namespace}/jobs`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ namespace, sequence })
+        body: JSON.stringify({
+          sequences: await parseFASTA(fasta)
+        })
       });
       if (response.ok) {
-        const ticketId = (await response.json()).toString();
-        addSearchById(ticketId)
+        const search: Search = await response.json();
+        addSearchById(search.id, search.status);
       } else {
         throw new Error(`Failed to submit search, received ${response.status}: ${response.statusText}`);
       }
@@ -107,8 +108,9 @@ export function useSearch() {
     }
   }
 
-  function addSearchById(id: Search['ticketId']) {
+  function addSearchById(id: Search['id'], status: Search['status'] = undefined) {
     setSearchIds([id, ...searchIds])
+    setSearchStatus(prev => ({ ...prev, id: status }))
   }
 
   function clearSearches() {
@@ -116,10 +118,12 @@ export function useSearch() {
   }
 
   const searches: Search[] = searchIds.map(id => ({
-    ticketId: id,
+    id: id,
     status: searchStatus[id],
     result: searchResults[id]
   }))
+
+  console.log({ searches, newSearch, addSearchById, clearSearches })
 
   return { searches, newSearch, addSearchById, clearSearches }
 }
