@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { Spin, List, Table, Avatar, PageHeader, Tabs, Button, Popconfirm, Input } from 'antd';
+import { Spin, List, Table, Avatar, PageHeader, Tabs, Button, Popconfirm, Input, Typography } from 'antd';
 import { Search } from '../types/Search';
 import { Alignment } from './Alignment';
 
@@ -68,22 +68,25 @@ export const SearchResults: FC<SearchResultsProps> = ({ searches, addSearchById,
           ><Button danger>Clear</Button></Popconfirm>
         ]}
       />
-      <List
-        dataSource={searches}
-        itemLayout="vertical"
-        renderItem={search => (
-          <List.Item>
-            <List.Item.Meta
-              avatar={(
-                <Spin spinning={search.status !== "completed"}>
-                  <Avatar>{search.status === "completed" ? '\u2714' : ''}</Avatar>
-                </Spin>
-              )}
-              title={`Search ID: ${search.id}`}
-              description={`Status: ${search.status ?? 'unknown'}`} />
-            <ResultContent search={search} />
-          </List.Item>
-        )} />
+      <Typography.Paragraph>
+        <List
+          dataSource={searches}
+          itemLayout="vertical"
+          renderItem={search => (
+            <List.Item>
+              <br />
+              <List.Item.Meta
+                avatar={(
+                  <Spin spinning={search.status !== "completed"}>
+                    <Avatar>{search.status === "completed" ? '\u2714' : ''}</Avatar>
+                  </Spin>
+                )}
+                title={<span>Search ID: <Typography.Text code>{search.id}</Typography.Text></span>}
+                description={<span>Status: {search.status ?? 'unknown'}</span>} />
+              <ResultContent search={search} />
+            </List.Item>
+          )} />
+      </Typography.Paragraph>
     </div>
   );
 };

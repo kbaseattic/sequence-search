@@ -3,13 +3,14 @@ import { notification } from 'antd';
 import { useLocalStorage } from '@rehooks/local-storage';
 import { Search } from '../types/Search';
 import { Namespace } from '../types/Namespace';
-import { usePrevious } from './usePrevious';
 import { urlFor } from '../utils/urlFor';
 import { parseFASTA } from '../utils/handleFASTA';
 
-async function fetchStatuses() {
+async function fetchStatuses(ids: Search['id'][]) {
   try {
-    const response = await fetch(urlFor("/api/v1/jobs"));
+    const response = await fetch(urlFor("/api/v1/jobs", {
+      'jobIds': ids.join(",")
+    }));
     if (response.ok) {
       const searchStatus: Record<Search['id'], Search> = await response.json();
       const newStatuses: Record<Search['id'], Search['status']> = {};
@@ -53,34 +54,37 @@ export function useSearch() {
   const [searchResults, setSearchResults] = useState<Record<Search['id'], Search['result']>>({});
 
   // Poll for search status changes
-  const shouldPoll = searchIds.some(id => searchStatus[id] !== "completed");
+  const pendingSerialized = JSON.stringify(
+    searchIds.filter(id => searchStatus[id] !== "completed")
+  );
   useEffect(() => {
-    if (!shouldPoll) return;
+    const pending: string[] = JSON.parse(pendingSerialized);
+    if (pending.length === 0) return;
 
     const poll = async () => {
-      const next = await fetchStatuses();
+      const next = await fetchStatuses(pending);
       setSearchStatus(prev => ({ ...prev, ...next }))
     };
 
     poll();
-    const pollInterval = setInterval(poll, 3000);
+    const pollInterval = setInterval(poll, 15000);
     return () => clearInterval(pollInterval);
-
-  }, [searchIds, shouldPoll]);
+  }, [pendingSerialized]);
 
   // Fetch results for newly completed searches
-  const completed = searchIds.filter(id => searchStatus[id] === "completed");
-  const prevCompleted = usePrevious(completed) || [];
-  const newlyCompleted = completed.filter(id => !prevCompleted.includes(id));
+  const completedSerialized = JSON.stringify(
+    searchIds.filter(id => searchStatus[id] === "completed")
+  );
   useEffect(() => {
-    newlyCompleted.forEach(async id => {
+    const completed: string[] = JSON.parse(completedSerialized);
+    completed.forEach(async id => {
       const result = await fetchResult(id);
       setSearchResults(prev => ({
         ...prev,
         [id]: result
       }))
     })
-  }, [newlyCompleted]);
+  }, [completedSerialized]);
 
   async function newSearch(namespace: Namespace['id'], fasta: string, eVal: number) {
     try {
@@ -95,7 +99,8 @@ export function useSearch() {
       });
       if (response.ok) {
         const search: Search = await response.json();
-        addSearchById(search.id, search.status);
+        setSearchIds([search.id, ...searchIds])
+        setSearchStatus(prev => ({ ...prev, [search.id]: search.status }))
       } else {
         throw new Error(`Failed to submit search, received ${response.status}: ${response.statusText}`);
       }
@@ -108,9 +113,26 @@ export function useSearch() {
     }
   }
 
-  function addSearchById(id: Search['id'], status: Search['status'] = undefined) {
-    setSearchIds([id, ...searchIds])
-    setSearchStatus(prev => ({ ...prev, id: status }))
+  async function addSearchById(id: Search['id']) {
+    try {
+      const response = await fetch(urlFor(`/api/v1/jobs/${id}`));
+      if (response.ok) {
+        setSearchIds([id, ...searchIds])
+      } else {
+        let errorMsg = "";
+        try {
+          const error: { message: string } = await response.json();
+          errorMsg = `"${error.message}"`
+        } catch { }
+        throw new Error(`Failed to find search, received ${response.status}: ${response.statusText} ${errorMsg}`);
+      }
+    } catch (err) {
+      notification.open({
+        message: 'Failed to find search',
+        description: (err instanceof Error) ? err.message : JSON.stringify(err),
+        type: 'error'
+      });
+    }
   }
 
   function clearSearches() {
