@@ -6,29 +6,25 @@ import { urlFor } from '../utils/urlFor';
 import { parseFASTA } from '../utils/handleFASTA';
 import { handleApiCall } from '../utils/handleApiCall';
 
-async function fetchStatuses(ids: Search['id'][]) {
-  return handleApiCall({
-    call: () => fetch(urlFor("/api/v1/jobs", {
-      'jobIds': ids.join(",")
-    })),
-    handleResult: (searchStatus: Record<Search['id'], Search>) => {
-      const newStatuses: Record<Search['id'], Search['status']> = {};
-      for (const id in searchStatus) {
-        newStatuses[id] = searchStatus[id].status
-      }
-      return newStatuses
-    },
-    errContext: "Failed to poll search status"
-  });
-}
+const fetchStatuses = (ids: Search['id'][]) => handleApiCall({
+  call: () => fetch(urlFor("/api/v1/jobs", {
+    'jobIds': ids.join(",")
+  })),
+  handleResult: (searchStatus: Record<Search['id'], Search>) => {
+    const newStatuses: Record<Search['id'], Search['status']> = {};
+    for (const id in searchStatus) {
+      newStatuses[id] = searchStatus[id].status
+    }
+    return newStatuses
+  },
+  errContext: "Failed to poll search status"
+});
 
-async function fetchResult(id: Search['id']) {
-  return handleApiCall({
-    call: () => fetch(urlFor(`/api/v1/jobs/${id}`)),
-    handleResult: (searchResult: Search['result']) => searchResult,
-    errContext: `Failed to retrieve search result for ${id}`
-  });
-}
+const fetchResult = (id: Search['id']) => handleApiCall({
+  call: () => fetch(urlFor(`/api/v1/jobs/${id}`)),
+  handleResult: (searchResult: Search['result']) => searchResult,
+  errContext: `Failed to retrieve search result for ${id}`
+});
 
 export function useSearch() {
   const [searchIds, setSearchIds] = useLocalStorage<Search['id'][]>('searchIds', []);
@@ -68,35 +64,31 @@ export function useSearch() {
     })
   }, [completedSerialized]);
 
-  async function newSearch(namespace: Namespace['id'], fasta: string, eVal: number) {
-    return handleApiCall({
-      call: async () => fetch(urlFor(`/api/v1/namespaces/${namespace}/jobs`), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          sequences: await parseFASTA(fasta),
-          params: {
-            eValue: eVal
-          }
-        })
-      }),
-      handleResult: (search: Search) => {
-        setSearchIds([search.id, ...searchIds])
-        setSearchStatus(prev => ({ ...prev, [search.id]: search.status }))
+  const newSearch = (namespace: Namespace['id'], fasta: string, eVal: number) => handleApiCall({
+    call: async () => fetch(urlFor(`/api/v1/namespaces/${namespace}/jobs`), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
       },
-      errContext: `Failed to submit search`
-    })
-  }
+      body: JSON.stringify({
+        sequences: await parseFASTA(fasta),
+        params: {
+          eValue: eVal
+        }
+      })
+    }),
+    handleResult: (search: Search) => {
+      setSearchIds([search.id, ...searchIds])
+      setSearchStatus(prev => ({ ...prev, [search.id]: search.status }))
+    },
+    errContext: `Failed to submit search`
+  });
 
-  async function addSearchById(id: Search['id']) {
-    return handleApiCall({
-      call: () => fetch(urlFor(`/api/v1/jobs/${id}`)),
-      handleResult: () => setSearchIds([id, ...searchIds]),
-      errContext: `Failed to load search "${id}"`
-    });
-  }
+  const addSearchById = (id: Search['id']) => handleApiCall({
+    call: () => fetch(urlFor(`/api/v1/jobs/${id}`)),
+    handleResult: () => setSearchIds([id, ...searchIds]),
+    errContext: `Failed to load search "${id}"`
+  });
 
   function clearSearches() {
     setSearchIds([]);
