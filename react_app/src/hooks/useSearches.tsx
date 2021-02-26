@@ -1,51 +1,33 @@
 import { useEffect, useState } from 'react';
-import { notification } from 'antd';
 import { useLocalStorage } from '@rehooks/local-storage';
 import { Search } from '../types/Search';
 import { Namespace } from '../types/Namespace';
 import { urlFor } from '../utils/urlFor';
 import { parseFASTA } from '../utils/handleFASTA';
+import { handleApiCall } from '../utils/handleApiCall';
 
 async function fetchStatuses(ids: Search['id'][]) {
-  try {
-    const response = await fetch(urlFor("/api/v1/jobs", {
+  return handleApiCall({
+    call: () => fetch(urlFor("/api/v1/jobs", {
       'jobIds': ids.join(",")
-    }));
-    if (response.ok) {
-      const searchStatus: Record<Search['id'], Search> = await response.json();
+    })),
+    handleResult: (searchStatus: Record<Search['id'], Search>) => {
       const newStatuses: Record<Search['id'], Search['status']> = {};
       for (const id in searchStatus) {
         newStatuses[id] = searchStatus[id].status
       }
       return newStatuses
-    } else {
-      throw new Error(`Failed to poll search status, received ${response.status}: ${response.statusText}`);
-    }
-  } catch (err) {
-    notification.open({
-      message: 'Failed to poll search status',
-      description: (err instanceof Error) ? err.message : JSON.stringify(err),
-      type: 'error'
-    });
-  }
+    },
+    errContext: "Failed to poll search status"
+  });
 }
 
 async function fetchResult(id: Search['id']) {
-  try {
-    const response = await fetch(urlFor(`/api/v1/jobs/${id}`));
-    if (response.ok) {
-      const result: Search['result'] = await response.json();
-      return result
-    } else {
-      throw new Error(`Failed to retrieve search result for ${id}, received ${response.status}: ${response.statusText}`);
-    }
-  } catch (err) {
-    notification.open({
-      message: 'Failed to retrieve search result',
-      description: (err instanceof Error) ? err.message : JSON.stringify(err),
-      type: 'error'
-    });
-  }
+  return handleApiCall({
+    call: () => fetch(urlFor(`/api/v1/jobs/${id}`)),
+    handleResult: (searchResult: Search['result']) => searchResult,
+    errContext: `Failed to retrieve search result for ${id}`
+  });
 }
 
 export function useSearch() {
@@ -87,52 +69,33 @@ export function useSearch() {
   }, [completedSerialized]);
 
   async function newSearch(namespace: Namespace['id'], fasta: string, eVal: number) {
-    try {
-      const response = await fetch(urlFor(`/api/v1/namespaces/${namespace}/jobs`), {
+    return handleApiCall({
+      call: async () => fetch(urlFor(`/api/v1/namespaces/${namespace}/jobs`), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          sequences: await parseFASTA(fasta)
+          sequences: await parseFASTA(fasta),
+          params: {
+            eValue: eVal
+          }
         })
-      });
-      if (response.ok) {
-        const search: Search = await response.json();
+      }),
+      handleResult: (search: Search) => {
         setSearchIds([search.id, ...searchIds])
         setSearchStatus(prev => ({ ...prev, [search.id]: search.status }))
-      } else {
-        throw new Error(`Failed to submit search, received ${response.status}: ${response.statusText}`);
-      }
-    } catch (err) {
-      notification.open({
-        message: 'Failed to submit search',
-        description: (err instanceof Error) ? err.message : JSON.stringify(err),
-        type: 'error'
-      });
-    }
+      },
+      errContext: `Failed to submit search`
+    })
   }
 
   async function addSearchById(id: Search['id']) {
-    try {
-      const response = await fetch(urlFor(`/api/v1/jobs/${id}`));
-      if (response.ok) {
-        setSearchIds([id, ...searchIds])
-      } else {
-        let errorMsg = "";
-        try {
-          const error: { message: string } = await response.json();
-          errorMsg = `"${error.message}"`
-        } catch { }
-        throw new Error(`Failed to find search, received ${response.status}: ${response.statusText} ${errorMsg}`);
-      }
-    } catch (err) {
-      notification.open({
-        message: 'Failed to find search',
-        description: (err instanceof Error) ? err.message : JSON.stringify(err),
-        type: 'error'
-      });
-    }
+    return handleApiCall({
+      call: () => fetch(urlFor(`/api/v1/jobs/${id}`)),
+      handleResult: () => setSearchIds([id, ...searchIds]),
+      errContext: `Failed to load search "${id}"`
+    });
   }
 
   function clearSearches() {
@@ -144,8 +107,6 @@ export function useSearch() {
     status: searchStatus[id],
     result: searchResults[id]
   }))
-
-  console.log({ searches, newSearch, addSearchById, clearSearches })
 
   return { searches, newSearch, addSearchById, clearSearches }
 }

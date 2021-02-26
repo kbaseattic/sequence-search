@@ -25,6 +25,6 @@ interface Result {
 export interface Search {
   id: string,
   namespace?: Namespace['id'],
-  status?: "queued" | "processing" | "completed",
+  status?: "queued" | "processing" | "completed" | "failed",
   result?: Result
 }

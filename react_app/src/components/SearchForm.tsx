@@ -25,7 +25,7 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
       <PageHeader title='Sequence Search' />
       {namespaceError ?
         <Alert
-          message="Error"
+          message="Failed to load namespaces"
           description={namespaceError.message}
           type="error"
           showIcon
