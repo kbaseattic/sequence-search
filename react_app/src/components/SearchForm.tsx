@@ -1,4 +1,4 @@
-import React, { FC, useState } from 'react';
+import React, { FC } from 'react';
 import { Spin, Form, Input, Select, Button, PageHeader, Alert } from 'antd';
 import { useNamespaces } from '../hooks/useNamespaces';
 import { validateFASTA } from '../utils/handleFASTA';
@@ -14,12 +14,22 @@ const formItemLayout = {
   },
 };
 
-type SearchFormProps = { onSubmit: (namespace: string, fasta: string, eVal: number) => any; };
+interface FormItems {
+  namespace: string;
+  fasta: string;
+  eVal: string;
+}
+
+interface SearchFormProps {
+  onSubmit: (namespace: string, fasta: string, eVal: number) => any;
+};
+
 export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
   const { namespaces, namespaceLoaded, namespaceError } = useNamespaces();
-  const [eVal, setEVal] = useState(1e-10);
 
-  const onFinish = ({ namespace, fasta, eVal }: { namespace: string; fasta: string; eVal: number; }) => onSubmit(namespace, fasta, eVal);
+  const onFinish = ({ namespace, fasta, eVal }: FormItems) => {
+    onSubmit(namespace, fasta, parseFloat(eVal));
+  }
 
   return (
     <Spin spinning={!namespaceLoaded}>
@@ -32,7 +42,7 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
           showIcon
         />
         :
-        <Form onFinish={onFinish} {...formItemLayout} initialValues={{ eVal }}>
+        <Form onFinish={onFinish} {...formItemLayout} initialValues={{ eVal: 1e-10 }}>
           <Form.Item
             label="Namespace"
             name="namespace"
@@ -56,9 +66,7 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
               }),
             ]}
           >
-            <Input
-              value={eVal.toExponential()}
-              onChange={(e) => setEVal(parseFloat(e.currentTarget.value))} />
+            <Input placeholder={"e.g. 1e-10"} />
           </Form.Item>
           <Form.Item
             label="FASTA Sequence(s)"
