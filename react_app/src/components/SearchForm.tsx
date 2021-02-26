@@ -1,5 +1,5 @@
-import React, { FC } from 'react';
-import { Spin, Form, Input, Select, InputNumber, Button, PageHeader, Alert } from 'antd';
+import React, { FC, useState } from 'react';
+import { Spin, Form, Input, Select, Button, PageHeader, Alert } from 'antd';
 import { useNamespaces } from '../hooks/useNamespaces';
 import { validateFASTA } from '../utils/handleFASTA';
 
@@ -17,6 +17,7 @@ const formItemLayout = {
 type SearchFormProps = { onSubmit: (namespace: string, fasta: string, eVal: number) => any; };
 export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
   const { namespaces, namespaceLoaded, namespaceError } = useNamespaces();
+  const [eVal, setEVal] = useState(1e-10);
 
   const onFinish = ({ namespace, fasta, eVal }: { namespace: string; fasta: string; eVal: number; }) => onSubmit(namespace, fasta, eVal);
 
@@ -31,11 +32,11 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
           showIcon
         />
         :
-        <Form onFinish={onFinish} {...formItemLayout} initialValues={{ eVal: 0 }}>
+        <Form onFinish={onFinish} {...formItemLayout} initialValues={{ eVal }}>
           <Form.Item
             label="Namespace"
             name="namespace"
-            rules={[{ required: true }]}
+            rules={[{ required: true, message: 'Please select a Namespace!' }]}
           >
             <Select>
               {namespaces.map((item) => {
@@ -46,8 +47,18 @@ export const SearchForm: FC<SearchFormProps> = ({ onSubmit }) => {
           <Form.Item
             label="E-Value Threshold"
             name="eVal"
+            rules={[
+              { required: true, message: 'Please input an E-Value!' },
+              () => ({
+                async validator(_rule, value) {
+                  if (isNaN(value)) throw new Error("Not a Number")
+                },
+              }),
+            ]}
           >
-            <InputNumber max={1} min={0}></InputNumber>
+            <Input
+              value={eVal.toExponential()}
+              onChange={(e) => setEVal(parseFloat(e.currentTarget.value))} />
           </Form.Item>
           <Form.Item
             label="FASTA Sequence(s)"
