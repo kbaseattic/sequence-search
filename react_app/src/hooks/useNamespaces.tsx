@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Namespace } from '../types/Namespace';
+import { handleApiCall } from '../utils/handleApiCall';
 import { urlFor } from '../utils/urlFor';
 
 export function useNamespaces() {
@@ -10,20 +11,16 @@ export function useNamespaces() {
   useEffect(() => {
     (async () => {
       if (!namespaceLoaded) {
-        try {
-          const response = await fetch(urlFor("/api/v1/namespaces"));
-          if (response.ok) {
-            setNamespaces(await response.json());
+        await handleApiCall({
+          call: () => fetch(urlFor("/api/v1/namespaces")),
+          handleResult: (namespaces: Namespace[]) => {
+            setNamespaces(namespaces);
             setNamespaceError(undefined);
-          } else {
-            throw new Error(`Failed to load namespaces, received ${response.status}: ${response.statusText}`);
-          }
-        } catch (err) {
-          if (err instanceof Error) setNamespaceError(err);
-          else setNamespaceError(new Error(`Unexpected Error: ${JSON.stringify(err)}`));
-        } finally {
-          setNamespaceLoaded(true);
-        }
+          },
+          errContext: "Failed to load namespaces",
+          handleError: setNamespaceError
+        })
+        setNamespaceLoaded(true);
       }
     })();
   }, [namespaceLoaded]);

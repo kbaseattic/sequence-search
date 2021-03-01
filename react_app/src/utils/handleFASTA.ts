@@ -39,7 +39,7 @@ export async function parseFASTA(fasta: string) {
   const sequences = sequenceGroups.map(([header, start, stop]) => {
     const idMatch = lines[header].match(/^>\s?([^ ]+)/);
     const id = idMatch ? idMatch[1] : `Unknown ID (L${header})`;
-    const seq = lines.slice(start, stop).join();
+    const seq = lines.slice(start, stop).join("");
     return {
       id: id,
       data: seq,

@@ -77,8 +77,11 @@ export const SearchResults: FC<SearchResultsProps> = ({ searches, addSearchById,
               <br />
               <List.Item.Meta
                 avatar={(
-                  <Spin spinning={search.status !== "completed"}>
-                    <Avatar>{search.status === "completed" ? '\u2714' : ''}</Avatar>
+                  <Spin spinning={!["completed", "failed"].includes(search.status ?? "")}>
+                    <Avatar>
+                      {search.status === "completed" ? '\u2713' : ''}
+                      {search.status === "failed" ? '\u2715' : ''}
+                    </Avatar>
                   </Spin>
                 )}
                 title={<span>Search ID: <Typography.Text code>{search.id}</Typography.Text></span>}
